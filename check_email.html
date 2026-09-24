@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block page_title %}Check & Analyze Email{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h3 class="fw-bold" data-i18n="check_title">Analyze Suspicious Email</h3>
+    <p class="text-muted" data-i18n="check_subtitle">Upload an .eml file or paste raw email headers to begin forensic investigation.</p>
+  </div>
+</div>
+
+<!-- Hackathon Demo Sample Triggers Bar -->
+<div class="card bg-gradient border-primary border-2 mb-4 shadow-sm">
+  <div class="card-body p-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-rocket-takeoff-fill text-primary fs-4"></i>
+        <div>
+          <strong data-i18n="sample_demo_label">Try Sample Demonstrations (Hackathon Demo):</strong>
+          <small class="text-muted d-block" data-i18n="sample_demo_sub">Instant one-click pre-configured sample emails</small>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button id="btn-load-phishing" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+          <i class="bi bi-bug-fill me-1"></i> <span data-i18n="btn_sample_phishing">Load Phishing Sample</span>
+        </button>
+        <button id="btn-load-suspicious" class="btn btn-warning btn-sm text-dark rounded-pill px-3 fw-bold">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i> <span data-i18n="btn_sample_suspicious">Load Suspicious Sample</span>
+        </button>
+        <button id="btn-load-safe" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
+          <i class="bi bi-shield-check me-1"></i> <span data-i18n="btn_sample_safe">Load Safe Sample</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Method 1: File Upload -->
+  <div class="col-lg-6">
+    <div class="soc-card h-100">
+      <div class="soc-card-title">
+        <span><i class="bi bi-file-earmark-arrow-up-fill me-2 text-primary"></i> <span data-i18n="method_1_title">Method 1: Upload .eml File</span></span>
+      </div>
+      <p class="text-muted small" data-i18n="method_1_desc">Select or drag standard .eml raw RFC822 email files exported from Outlook, Gmail, or Thunderbird.</p>
+
+      <form action="{{ url_for('upload_email') }}" method="POST" enctype="multipart/form-data" id="upload-form">
+        <div class="p-4 border-2 border-dashed rounded-3 text-center bg-light mb-3 position-relative" style="border-style: dashed; border-color: #cbd5e1;">
+          <i class="bi bi-cloud-arrow-up text-primary" style="font-size: 3rem;"></i>
+          <h6 class="fw-bold mt-2" data-i18n="method_1_drag">Drag & drop an .eml file here, or click to browse</h6>
+          <small class="text-muted d-block mb-3" data-i18n="method_1_limit">Supported format: .eml (Max size: 5MB)</small>
+          
+          <input type="file" name="email_file" id="email_file" accept=".eml" class="form-control mb-3" required>
+        </div>
+        <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold">
+          <i class="bi bi-search me-1"></i> <span data-i18n="btn_upload_analyze">Upload & Analyze File</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Method 2: Paste Raw Content -->
+  <div class="col-lg-6">
+    <div class="soc-card h-100">
+      <div class="soc-card-title">
+        <span><i class="bi bi-clipboard-data-fill me-2 text-primary"></i> <span data-i18n="method_2_title">Method 2: Paste Raw Email Content</span></span>
+      </div>
+      <p class="text-muted small" data-i18n="method_2_desc">Paste full raw email headers and body text directly into the forensic sandbox.</p>
+
+      <form action="{{ url_for('paste_email') }}" method="POST" id="paste-form">
+        <div class="mb-3">
+          <textarea name="email_raw" id="email_raw" class="form-control font-monospace fs-7" rows="8" placeholder="Paste complete raw email headers and body text here..." data-i18n="paste_placeholder" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold">
+          <i class="bi bi-shield-shaded me-1"></i> <span data-i18n="btn_analyze_threat">Analyze Email Threat</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const pasteArea = document.getElementById('email_raw');
+
+  document.getElementById('btn-load-phishing').addEventListener('click', async () => {
+    const res = await apiGet('/api/samples/phishing');
+    if (res.raw_content && pasteArea) {
+      pasteArea.value = res.raw_content;
+      showToast("Phishing Sample Loaded", "PayPal urgency sample inserted. Click 'Analyze Email Threat'.", "warning");
+    }
+  });
+
+  document.getElementById('btn-load-suspicious').addEventListener('click', async () => {
+    const res = await apiGet('/api/samples/suspicious');
+    if (res.raw_content && pasteArea) {
+      pasteArea.value = res.raw_content;
+      showToast("Suspicious Sample Loaded", "Executive wire transfer sample inserted.", "warning");
+    }
+  });
+
+  document.getElementById('btn-load-safe').addEventListener('click', async () => {
+    const res = await apiGet('/api/samples/safe');
+    if (res.raw_content && pasteArea) {
+      pasteArea.value = res.raw_content;
+      showToast("Safe Sample Loaded", "Internal Sprint notification sample inserted.", "success");
+    }
+  });
+});
+</script>
+{% endblock %}

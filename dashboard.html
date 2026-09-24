@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block page_title %}Security Operations Center (SOC) Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Cards Grid -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon blue">
+      <i class="bi bi-inbox-fill"></i>
+    </div>
+    <div>
+      <div class="stat-val" id="stat-total">--</div>
+      <div class="stat-label" data-i18n="stat_total_analyzed">Total Emails Analyzed</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon red">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+    <div>
+      <div class="stat-val text-danger" id="stat-threats">--</div>
+      <div class="stat-label" data-i18n="stat_threats_detected">Threats Detected</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon amber">
+      <i class="bi bi-shield-slash-fill"></i>
+    </div>
+    <div>
+      <div class="stat-val text-warning" id="stat-high-risk">--</div>
+      <div class="stat-label" data-i18n="stat_high_risk">High Risk Cases</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon green">
+      <i class="bi bi-clock-history"></i>
+    </div>
+    <div>
+      <div class="stat-val text-success" id="stat-24h">--</div>
+      <div class="stat-label" data-i18n="stat_processed_24h">Processed Last 24 Hours</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="soc-card h-100 border-start border-4 border-primary">
+      <h5 class="fw-bold"><i class="bi bi-shield-lock-fill text-primary me-2"></i>AI Threat Detection</h5>
+      <p class="text-muted mb-0">Analyze emails and identify phishing, spoofing, BEC, malicious, and safe patterns.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="soc-card h-100 border-start border-4 border-success">
+      <h5 class="fw-bold"><i class="bi bi-globe2 text-success me-2"></i>GeoLocation Intelligence</h5>
+      <p class="text-muted mb-0">Locate the approximate network infrastructure behind suspicious email traffic.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="soc-card h-100 border-start border-4 border-warning">
+      <h5 class="fw-bold"><i class="bi bi-search text-warning me-2"></i>Forensic Intelligence</h5>
+      <p class="text-muted mb-0">Collect evidence, correlate indicators, create cases, and generate reports.</p>
+    </div>
+  </div>
+</div>
+
+<div class="soc-card mb-4">
+  <div class="soc-card-title"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i> Investigation Workflow</div>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 text-center font-monospace fs-8">
+    {% for stage in ['Email', 'AI Analysis', 'Threat Detection', 'IP / URL Extraction', 'GeoLocation', 'Forensic Investigation', 'Report'] %}
+      <span class="badge bg-light text-dark border px-3 py-2">{{ stage }}</span>
+      {% if not loop.last %}<i class="bi bi-arrow-right text-primary"></i>{% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Chart.js Threat Distribution -->
+  <div class="col-lg-5">
+    <div class="soc-card h-100">
+      <div class="soc-card-title">
+        <span><i class="bi bi-pie-chart-fill me-2 text-primary"></i> <span data-i18n="chart_threat_distribution">Threat Distribution</span></span>
+        <span class="badge bg-light text-dark font-monospace border" data-i18n="chart_realtime">Real-Time</span>
+      </div>
+      <div style="height: 280px; position: relative;">
+        <canvas id="threatOverviewChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Action & Intelligence Banner -->
+  <div class="col-lg-7">
+    <div class="soc-card h-100 bg-gradient">
+      <div class="soc-card-title">
+        <span><i class="bi bi-lightning-charge-fill me-2 text-warning"></i> <span data-i18n="rapid_analysis_title">Rapid Email Threat Analysis</span></span>
+      </div>
+      <p class="text-muted" data-i18n="rapid_analysis_desc">
+        Need to investigate a suspicious email received in your inbox? Use EmailShield's evidence-centric parser to break down raw headers, origin IPs, and URLs.
+      </p>
+
+      <div class="row g-3 mt-2">
+        <div class="col-md-6">
+          <div class="p-3 border rounded bg-light">
+            <h6 class="fw-bold"><i class="bi bi-file-earmark-arrow-up text-primary me-2"></i><span data-i18n="upload_eml_title">Upload EML File</span></h6>
+            <small class="text-muted d-block mb-2" data-i18n="upload_eml_sub">Inspect .eml headers safely in sandbox</small>
+            <a href="{{ url_for('check_email') }}" class="btn btn-sm btn-primary rounded-pill w-100" data-i18n="nav_check_email">Upload & Analyze</a>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 border rounded bg-light">
+            <h6 class="fw-bold"><i class="bi bi-activity text-danger me-2"></i><span data-i18n="live_monitor_title">Live Inbox Monitor</span></h6>
+            <small class="text-muted d-block mb-2" data-i18n="live_monitor_sub">Simulate real-time inbox threat stream</small>
+            <a href="{{ url_for('monitor') }}" class="btn btn-sm btn-outline-danger rounded-pill w-100" data-i18n="nav_monitor">Open Monitor</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Investigations Table -->
+<div class="soc-card">
+  <div class="soc-card-title">
+    <span><i class="bi bi-list-task me-2 text-primary"></i> <span data-i18n="recent_investigations_title">Recent Forensic Investigations</span></span>
+    <span class="badge bg-secondary" data-i18n="demo_data_notice">Synthetic Demo Data Included</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="soc-table">
+      <thead>
+        <tr>
+          <th data-i18n="table_case_id">Case ID</th>
+          <th data-i18n="table_subject">Subject / Title</th>
+          <th data-i18n="table_classification">Classification</th>
+          <th data-i18n="table_risk_score">Risk Score</th>
+          <th data-i18n="table_analyzed_at">Analyzed At</th>
+          <th data-i18n="table_action">Action</th>
+        </tr>
+      </thead>
+      <tbody id="recent-investigations-tbody">
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading investigations...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

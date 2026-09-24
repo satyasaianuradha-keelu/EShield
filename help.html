@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block page_title %}Cybersecurity Educational Hub{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h3 class="fw-bold" data-i18n="help_title">Cybersecurity Educational Hub</h3>
+    <p class="text-muted" data-i18n="help_subtitle">Learn how email threats work and stay safe online.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="soc-card h-100">
+      <div class="soc-card-title text-danger">
+        <span><i class="bi bi-bug-fill me-2"></i> <span data-i18n="q1_title">What is Phishing?</span></span>
+      </div>
+      <p class="text-muted" data-i18n="q1_desc">
+        Phishing is a fraudulent attempt to steal sensitive information such as usernames, passwords, and credit card details by impersonating a trustworthy entity.
+      </p>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="soc-card h-100">
+      <div class="soc-card-title text-warning">
+        <span><i class="bi bi-person-bounding-box me-2"></i> <span data-i18n="q2_title">What is Email Spoofing?</span></span>
+      </div>
+      <p class="text-muted" data-i18n="q2_desc">
+        Email spoofing occurs when an attacker forged the email header From address so that the message appears to originate from someone else.
+      </p>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="soc-card h-100">
+      <div class="soc-card-title text-primary">
+        <span><i class="bi bi-shield-check me-2"></i> <span data-i18n="q3_title">What are SPF, DKIM, and DMARC?</span></span>
+      </div>
+      <p class="text-muted" data-i18n="q3_desc">
+        These are email authentication standards. SPF verifies sender IP authorization, DKIM adds a digital signature, and DMARC instructs mail servers on how to handle failed checks.
+      </p>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="soc-card h-100">
+      <div class="soc-card-title text-info">
+        <span><i class="bi bi-geo-alt-fill me-2"></i> <span data-i18n="q4_title">What is IP Geolocation?</span></span>
+      </div>
+      <p class="text-muted" data-i18n="q4_desc">
+        IP Geolocation maps an IP address to an approximate physical location. Note: IP location is approximate and represents mail server routing, not necessarily the actual sender person.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

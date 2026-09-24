@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block page_title %}Live Email Monitor Simulator{% endblock %}
+
+{% block content %}
+<!-- Top Alert Banner -->
+<div class="soc-card bg-gradient border-primary mb-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="p-3 bg-primary text-white rounded-circle">
+        <i class="bi bi-activity fs-3"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0">Simulated Real-Time Email Monitor</h4>
+          <span id="monitor-status-badge" class="badge bg-secondary px-3 py-2 fs-6">Monitoring: OFF</span>
+        </div>
+        <p class="text-muted mb-0 small">
+          Simulates inbound email traffic ingestion, continuous automated threat evaluation, and real-time alert generation.
+        </p>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <button id="btn-toggle-monitor" class="btn btn-outline-success rounded-pill px-4 fw-bold">
+        <i class="bi bi-play-circle-fill me-1"></i> Start Live Monitoring
+      </button>
+      <button id="btn-manual-trigger" class="btn btn-primary rounded-pill px-3 fw-bold">
+        <i class="bi bi-lightning-charge-fill me-1"></i> Trigger Sample Email
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-warning py-2 mb-4 d-flex align-items-center gap-2 fs-8">
+  <i class="bi bi-info-circle-fill me-1"></i>
+  <span><strong>Demo Environment Notice:</strong> This is a synthetic Email Monitor simulation environment designed for hackathon demonstration. No real email inbox connections are modified.</span>
+</div>
+
+<!-- Live Inbound Feed Table -->
+<div class="soc-card">
+  <div class="soc-card-title d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-stream me-2 text-primary"></i> Live Inbound Email Stream</span>
+    <small class="text-muted">Auto-updating live table</small>
+  </div>
+
+  <div class="table-responsive">
+    <table class="soc-table">
+      <thead>
+        <tr>
+          <th>Case ID</th>
+          <th>Subject / Payload</th>
+          <th>Sender Address</th>
+          <th>Classification</th>
+          <th>Risk Score</th>
+          <th>Received</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="monitor-feed-tbody">
+        {% for c in initial_cases %}
+          <tr>
+            <td><span class="badge bg-dark">{{ c.case_number }}</span></td>
+            <td><strong class="text-dark">{{ c.subject }}</strong></td>
+            <td><small class="text-muted">{{ c.sender }}</small></td>
+            <td>
+              {% if c.risk_score >= 70 %}
+                <span class="badge-threat high">{{ c.classification }}</span>
+              {% elif c.risk_score >= 35 %}
+                <span class="badge-threat medium">{{ c.classification }}</span>
+              {% else %}
+                <span class="badge-threat low">{{ c.classification }}</span>
+              {% endif %}
+            </td>
+            <td><span class="fw-bold">{{ c.risk_score }} / 100</span></td>
+            <td><small class="text-muted">{{ c.created_at }}</small></td>
+            <td>
+              <a href="{{ url_for('investigation', case_number=c.case_number) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                <i class="bi bi-search me-1"></i> View Details
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

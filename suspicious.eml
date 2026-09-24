@@ -1,0 +1,30 @@
+From: "Robert Johnson (CEO)" <ceo.johnson@executive-mail.org>
+To: "Alex Miller (Finance)" <finance-director@company.org>
+Subject: Urgent Wire Transfer Request - Confidential Acquisition
+Date: Wed, 23 Sep 2026 08:30:00 +0000
+Message-ID: <202609230830.ceo-request@executive-mail.org>
+Reply-To: private-johnson@consultant-group-exec.com
+Return-Path: bounce@executive-mail.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Received: from executive-mail.org (executive-mail.org [193.109.112.44])
+	by mx.company.org (Postfix) with ESMTP id s8834
+	for <finance-director@company.org>; Wed, 23 Sep 2026 08:30:05 +0000
+Authentication-Results: mx.company.org;
+	spf=softfail (sender IP 193.109.112.44);
+	dkim=none;
+	dmarc=fail header.from=company.org
+
+Hi Alex,
+
+I am currently in a confidential executive board meeting and cannot take mobile calls. 
+
+We are finalizing an urgent strategic acquisition agreement today. I need you to initiate a wire transfer of $48,500 to our external legal advisor's escrow account immediately.
+
+Do not discuss this with anyone in the office until the public announcement tomorrow.
+
+Reply directly to this email to receive the wire routing details.
+
+Best regards,
+Robert Johnson
+Chief Executive Officer, Company Inc.

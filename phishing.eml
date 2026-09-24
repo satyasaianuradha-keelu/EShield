@@ -1,0 +1,31 @@
+From: "PayPal Security Team" <service-update@mail-auth-verify.xyz>
+To: "User Security Alert Target" <security-target@company.org>
+Subject: URGENT: Your PayPal Account Security Notice - Action Required Immediately
+Date: Wed, 23 Sep 2026 09:12:00 +0000
+Message-ID: <202609230912.paypalsecurity@mail-auth-verify.xyz>
+Reply-To: support-collector@hackerserver.info
+Return-Path: bounce-handler@mail-auth-verify.xyz
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Received: from mail-auth-verify.xyz (mail-auth-verify.xyz [185.220.101.5])
+	by mx.company.org (Postfix) with ESMTP id p1024
+	for <security-target@company.org>; Wed, 23 Sep 2026 09:12:05 +0000
+Authentication-Results: mx.company.org;
+	spf=fail (sender IP 185.220.101.5) smtp.mailfrom=bounce-handler@mail-auth-verify.xyz;
+	dkim=fail header.d=paypal.com;
+	dmarc=fail action=none header.from=paypal.com
+
+Dear Customer,
+
+We detected suspicious unauthorized login attempts on your PayPal account from IP address 185.220.101.5 (Moscow, Russia).
+
+To prevent permanent account suspension and financial restriction, you must verify your identity and update your payment authorization immediately.
+
+Click the official link below to restore your account status:
+http://paypal-verification-security-portal.com.xyz/login/verify.php
+
+Notice: If you do not complete verification within 24 hours, your account balance will be frozen permanently.
+
+Thank you,
+PayPal Cyber Security Division
+http://www.paypal.com

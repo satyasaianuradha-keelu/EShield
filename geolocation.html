@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block page_title %}GeoLocation & Threat Infrastructure{% endblock %}
+
+{% block content %}
+<div class="row mb-3 align-items-center">
+  <div class="col-md-7">
+    <h3 class="fw-bold text-dark mb-1"><i class="bi bi-geo-alt-fill text-danger me-2"></i> GeoLocation & Threat Infrastructure</h3>
+    <p class="text-muted mb-0 fs-7">Geographic mapping & ISP infrastructure intelligence for suspicious email mail relays and target URLs.</p>
+  </div>
+  <div class="col-md-5 text-md-end">
+    <form method="GET" action="{{ url_for('geolocation_page') }}" class="d-inline-block">
+      <div class="input-group">
+        <label class="input-group-text bg-dark text-white border-secondary fs-7 fw-bold">Select Analyzed Case:</label>
+        <select name="case_id" class="form-select font-monospace fs-7" onchange="this.form.submit()">
+          {% for c in cases %}
+            <option value="{{ c.case_number }}" {% if selected_case and selected_case.case_number == c.case_number %}selected{% endif %}>
+              {{ c.case_number }} - {{ c.classification }} ({{ c.subject[:25] }}...)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- LEFT COLUMN: Infrastructure Information -->
+  <div class="col-lg-5">
+    <div class="soc-card h-100 border-start border-4 border-danger">
+      <div class="soc-card-title d-flex align-items-center justify-content-between">
+        <span class="text-danger fw-bold"><i class="bi bi-hdd-network-fill me-2"></i> Network Infrastructure Data</span>
+        <span class="badge bg-secondary text-uppercase">{{ geo_info.source or 'DEMO / SAMPLE DATA' }}</span>
+      </div>
+
+      <table class="table table-borderless table-sm fs-7 mb-3">
+        <tbody>
+          <tr>
+            <td class="fw-bold text-muted" style="width: 130px;">Source IP:</td>
+            <td class="font-monospace text-danger fw-bold fs-6">{{ geo_info.ip or origin_ip }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">Destination IP:</td>
+            <td class="font-monospace text-muted">Not available in analyzed headers</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">Sender Domain:</td>
+            <td class="font-monospace text-primary fw-bold">{{ domain_name }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">Extracted URL:</td>
+            <td class="font-monospace text-break text-danger fs-8">{{ url_target }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">Country:</td>
+            <td><strong class="text-dark">{{ geo_info.country or 'Germany' }}</strong> ({{ geo_info.country_code or 'DE' }})</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">City / Region:</td>
+            <td>{{ geo_info.city or 'Munich' }}, {{ geo_info.region or 'Bavaria' }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">ISP:</td>
+            <td class="fw-semibold">{{ geo_info.isp or 'Tor Exit Node Network / Host Europe' }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">ASN:</td>
+            <td class="font-monospace">{{ geo_info.asn or 'AS208323' }}</td>
+          </tr>
+          <tr>
+            <td class="fw-bold text-muted">Reputation:</td>
+            <td>
+              <span class="badge {% if 'MALICIOUS' in (geo_info.reputation_score or '')|upper %}bg-danger{% elif 'SUSPICIOUS' in (geo_info.reputation_score or '')|upper %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ geo_info.reputation_score or 'UNKNOWN' }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Required Disclaimer -->
+      <div class="alert alert-warning border border-warning py-2 px-3 mb-0 fs-8 rounded-3">
+        <i class="bi bi-shield-exclamation text-warning me-1"></i>
+        <strong>Disclaimer:</strong> IP geolocation represents approximate network infrastructure location and does not identify the attacker's exact physical location.
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: Interactive Leaflet Map -->
+  <div class="col-lg-7">
+    <div class="soc-card h-100">
+      <div class="soc-card-title d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-map-fill me-2 text-primary"></i> Interactive Infrastructure Map</span>
+        <span class="badge bg-dark font-monospace">Lat: {{ geo_info.latitude or 48.1371 }}, Lon: {{ geo_info.longitude or 11.5754 }}</span>
+      </div>
+
+      <div id="geolocation-main-map" style="height: 380px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+
+      <div class="d-flex align-items-center justify-content-between mt-2 fs-8 text-muted px-1">
+        <span>📍 <strong>Marker:</strong> Suspicious Infrastructure Server</span>
+        <span>Tile Provider: © OpenStreetMap contributors</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const lat = {{ geo_info.latitude if geo_info and geo_info.latitude else 48.1371 }};
+  const lon = {{ geo_info.longitude if geo_info and geo_info.longitude else 11.5754 }};
+  const ipStr = "{{ geo_info.ip if geo_info and geo_info.ip else '185.220.101.5' }}";
+  const cityStr = "{{ geo_info.city if geo_info and geo_info.city else 'Munich' }}";
+  const countryStr = "{{ geo_info.country if geo_info and geo_info.country else 'Germany' }}";
+  const ispStr = "{{ geo_info.isp if geo_info and geo_info.isp else 'Tor Exit Node / Host Europe' }}";
+
+  const map = L.map('geolocation-main-map').setView([lat, lon], 5);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  const marker = L.marker([lat, lon]).addTo(map);
+  marker.bindPopup(`
+    <div style="font-family: Inter, sans-serif;">
+      <h6 style="color: #dc2626; font-weight: bold; margin-bottom: 4px;">📍 Suspicious Infrastructure</h6>
+      <b>IP:</b> ${ipStr}<br/>
+      <b>Location:</b> ${cityStr}, ${countryStr}<br/>
+      <b>ISP:</b> ${ispStr}<br/>
+      <small style="color: #64748b;">Approximate IP location</small>
+    </div>
+  `).openPopup();
+});
+</script>
+{% endblock %}

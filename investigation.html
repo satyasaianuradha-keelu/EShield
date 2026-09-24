@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block page_title %}SOC Forensic Investigation: {{ case.case_number }}{% endblock %}
+
+{% block content %}
+<!-- Case Header Bar -->
+<div class="soc-card bg-dark text-white mb-4 shadow-lg border border-secondary">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-primary fs-6 font-monospace">Case: {{ case.case_number }}</span>
+        {% set risk = fresh_analysis.risk_score if fresh_analysis else analysis.risk_score %}
+        {% if risk >= 70 %}
+          <span class="badge-threat high">{{ analysis.classification }}</span>
+        {% elif risk >= 35 %}
+          <span class="badge-threat medium">{{ analysis.classification }}</span>
+        {% else %}
+          <span class="badge-threat low">{{ analysis.classification }}</span>
+        {% endif %}
+        <span class="badge bg-outline-light border text-light">{{ case.status }}</span>
+        <span class="badge bg-danger text-uppercase">Severity: {{ fresh_analysis.severity if fresh_analysis else 'HIGH' }}</span>
+      </div>
+      <h4 class="fw-bold text-white mb-0">{{ email.subject }}</h4>
+      <small class="text-white-50">Analyzed at {{ case.created_at }} • Confidence: {{ fresh_analysis.confidence if fresh_analysis else analysis.confidence }}</small>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-end">
+        <small class="text-uppercase text-white-50 font-monospace d-block" data-i18n="table_risk_score">Threat Risk Score</small>
+        <span class="display-6 fw-extrabold {% if risk >= 70 %}text-danger{% elif risk >= 35 %}text-warning{% else %}text-success{% endif %}">
+          {{ risk }} <span class="fs-6 text-white-50">/ 100</span>
+        </span>
+      </div>
+      <a href="{{ url_for('download_report', case_number=case.case_number) }}" class="btn btn-primary btn-lg rounded-pill px-4 shadow fw-bold">
+        <i class="bi bi-file-earmark-pdf-fill me-2"></i> <span data-i18n="pdf_report_btn">Download PDF Report</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Investigation Tab Bar -->
+<ul class="nav nav-tabs-soc mb-4" id="investigationTabs" role="tablist">
+  <button class="tab-btn active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">
+    <i class="bi bi-speedometer2 me-1"></i> <span>Consolidated Overview</span>
+  </button>
+  <button class="tab-btn" data-bs-toggle="tab" data-bs-target="#tab-ai" type="button">
+    <i class="bi bi-cpu-fill me-1"></i> <span>AI Threat Analysis</span>
+  </button>
+  <button class="tab-btn" data-bs-toggle="tab" data-bs-target="#tab-geo" type="button" id="btn-tab-geo">
+    <i class="bi bi-geo-alt-fill me-1"></i> <span>GeoLocation & Infrastructure</span>
+  </button>
+  <button class="tab-btn" data-bs-toggle="tab" data-bs-target="#tab-auth" type="button">
+    <i class="bi bi-shield-check me-1"></i> <span>Authentication (SPF/DKIM/DMARC)</span>
+  </button>
+  <button class="tab-btn" data-bs-toggle="tab" data-bs-target="#tab-urls" type="button">
+    <i class="bi bi-link-45deg me-1"></i> <span>Threat Indicators & Hashes</span>
+  </button>
+  <button class="tab-btn" data-bs-toggle="tab" data-bs-target="#tab-timeline" type="button">
+    <i class="bi bi-clock-history me-1"></i> <span>Forensic Timeline</span>
+  </button>
+  <button class="tab-btn" data-bs-toggle="tab" data-bs-target="#tab-graph" type="button" id="btn-tab-graph">
+    <i class="bi bi-diagram-3-fill me-1"></i> <span>Topology Graph</span>
+  </button>
+  <button class="tab-btn" data-bs-toggle="tab" data-bs-target="#tab-headers" type="button">
+    <i class="bi bi-code-square me-1"></i> <span>Raw Headers</span>
+  </button>
+</ul>
+
+<div class="tab-content" id="investigationTabContent">
+
+  <!-- TAB 1: CONSOLIDATED OVERVIEW -->
+  <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+    
+    <!-- Visual 7-Stage Flowchart -->
+    <div class="soc-card mb-4 border-start border-4 border-primary">
+      <div class="soc-card-title text-primary"><i class="bi bi-diagram-2-fill me-2"></i> Forensic Investigation Stage Flowchart</div>
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 text-center font-monospace fs-8">
+        {% for step in workflow_steps %}
+          <div class="p-2 rounded bg-light border flex-fill">
+            <span class="badge bg-primary rounded-circle mb-1">{{ step.step }}</span>
+            <strong class="d-block text-dark">{{ step.title }}</strong>
+            <small class="text-muted d-block" style="font-size: 0.7rem;">{{ step.desc }}</small>
+          </div>
+          {% if not loop.last %}
+            <i class="bi bi-chevron-right text-muted d-none d-md-block"></i>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <!-- Email Evidence -->
+      <div class="col-lg-6">
+        <div class="soc-card h-100">
+          <div class="soc-card-title text-dark"><i class="bi bi-envelope-check-fill me-2 text-primary"></i> Email Evidence</div>
+          <table class="table table-borderless table-sm fs-7">
+            <tbody>
+              <tr><td class="fw-bold text-muted" style="width: 140px;">Sender (From):</td><td class="font-monospace">{{ email.sender }}</td></tr>
+              <tr><td class="fw-bold text-muted">Reply-To Address:</td><td class="font-monospace {% if email.reply_to and email.reply_to != email.sender %}text-danger fw-bold{% endif %}">{{ email.reply_to or 'N/A' }}</td></tr>
+              <tr><td class="fw-bold text-muted">Recipient (To):</td><td class="font-monospace">{{ email.recipient }}</td></tr>
+              <tr><td class="fw-bold text-muted">Subject:</td><td class="fw-semibold">{{ email.subject }}</td></tr>
+              <tr><td class="fw-bold text-muted">Date/Time:</td><td>{{ email.date_str or 'N/A' }}</td></tr>
+              <tr><td class="fw-bold text-muted">Message-ID:</td><td class="font-monospace text-truncate" style="max-width: 250px;">{{ email.message_id or 'N/A' }}</td></tr>
+            </tbody>
+          </table>
+
+          <div class="mt-3">
+            <h6 class="fw-bold text-muted fs-8 text-uppercase">Clean Body Content</h6>
+            <div class="p-3 bg-light rounded font-monospace fs-8 text-dark overflow-auto" style="max-height: 140px; white-space: pre-wrap;">{{ email.body_plain or 'No plain text body.' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network Evidence & GeoLocation Summary -->
+      <div class="col-lg-6">
+        <div class="soc-card h-100 border-start border-4 border-danger">
+          <div class="soc-card-title text-danger"><i class="bi bi-hdd-network-fill me-2"></i> Network Evidence & Infrastructure</div>
+          <table class="table table-borderless table-sm fs-7">
+            <tbody>
+              <tr><td class="fw-bold text-muted" style="width: 140px;">Source IP:</td><td class="font-monospace text-danger fw-bold fs-6">{{ geo_info.ip }}</td></tr>
+              <tr><td class="fw-bold text-muted">Country:</td><td><strong>{{ geo_info.country }}</strong> ({{ geo_info.country_code }})</td></tr>
+              <tr><td class="fw-bold text-muted">City / Region:</td><td>{{ geo_info.city }}, {{ geo_info.region }}</td></tr>
+              <tr><td class="fw-bold text-muted">ISP Host:</td><td>{{ geo_info.isp }}</td></tr>
+              <tr><td class="fw-bold text-muted">ASN:</td><td class="font-monospace">{{ geo_info.asn }}</td></tr>
+              <tr><td class="fw-bold text-muted">Reputation:</td><td><span class="badge bg-danger">{{ geo_info.reputation_score }}</span></td></tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-warning py-2 mb-0 fs-8 border border-warning">
+            <i class="bi bi-shield-exclamation text-warning me-1"></i>
+            <strong>Disclaimer:</strong> IP geolocation represents approximate network infrastructure location and does not identify the attacker's exact physical location.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Threat Analysis Summary Card -->
+    <div class="soc-card border-warning">
+      <div class="soc-card-title text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i> AI Threat Analysis & Forensic Evidence Summary</div>
+      <p class="mb-2 text-dark font-monospace"><strong>AI Conclusion:</strong> “{{ fresh_analysis.ai_conclusion }}”</p>
+      
+      {% set reasons = analysis.reasons_json | from_json if analysis.reasons_json else [] %}
+      {% for r in reasons %}
+        <div class="p-2 mb-2 bg-light rounded border-start border-4 border-danger">
+          <strong class="text-dark d-block fs-7">{{ r.title }}</strong>
+          <small class="text-muted d-block">{{ r.desc }}</small>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="soc-card mt-4">
+      <div class="soc-card-title text-primary"><i class="bi bi-broadcast-pin me-2"></i> Threat Intelligence Correlation</div>
+      <div class="row g-3">
+        {% for intel in [ip_intelligence, domain_intelligence, url_intelligence] if intel %}
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <div class="d-flex justify-content-between gap-2 mb-2">
+                <strong class="text-dark">{{ intel.type }}</strong>
+                <span class="badge {% if intel.reputation == 'MALICIOUS' %}bg-danger{% elif intel.reputation == 'SUSPICIOUS' %}bg-warning text-dark{% elif intel.reputation == 'SAFE' %}bg-success{% else %}bg-secondary{% endif %}">{{ intel.reputation or 'UNKNOWN' }}</span>
+              </div>
+              <div class="font-monospace text-break fs-8">{{ intel.query }}</div>
+              <small class="text-muted d-block mt-2">{{ (intel.categories or [intel.threat_category or 'No category available'])|join(', ') }}</small>
+              <small class="text-muted d-block">Source: {{ intel.source or 'Unknown' }}</small>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 2: AI THREAT ANALYSIS -->
+  <div class="tab-pane fade" id="tab-ai" role="tabpanel">
+    <div class="soc-card border-start border-4 border-info">
+      <div class="soc-card-title text-info fs-5 fw-bold"><i class="bi bi-cpu-fill me-2"></i> AI Threat Analysis Engine</div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Risk Score</small>
+            <span class="fs-2 fw-extrabold {% if risk >= 70 %}text-danger{% elif risk >= 35 %}text-warning{% else %}text-success{% endif %}">
+              {{ risk }} / 100
+            </span>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Classification</small>
+            <span class="fs-4 fw-bold text-info">{{ fresh_analysis.classification }}</span>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Confidence</small>
+            <span class="fs-4 fw-bold text-light">{{ fresh_analysis.confidence }}</span>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Severity</small>
+            <span class="fs-4 fw-bold {% if fresh_analysis.severity == 'HIGH' %}text-danger{% elif fresh_analysis.severity == 'MEDIUM' %}text-warning{% else %}text-success{% endif %}">
+              {{ fresh_analysis.severity }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-light rounded mb-3 border">
+        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-check2-square text-success me-2"></i> Why was this detected?</h6>
+        <ul class="list-unstyled mb-0 fs-7">
+          {% for check in fresh_analysis.why_detected_checks %}
+            <li class="mb-1 text-dark">
+              <i class="bi bi-check-lg text-success fw-bold me-2"></i> <strong>{{ check.text }}</strong>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="p-3 bg-info bg-opacity-10 border border-info rounded">
+        <h6 class="fw-bold text-info mb-1"><i class="bi bi-chat-quote-fill me-2"></i> AI Conclusion:</h6>
+        <p class="mb-0 text-dark fst-italic fs-6">“{{ fresh_analysis.ai_conclusion }}”</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: GEOLOCATION MAP -->
+  <div class="tab-pane fade" id="tab-geo" role="tabpanel">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="soc-card h-100 border-start border-4 border-danger">
+          <div class="soc-card-title text-danger">Origin Infrastructure Metadata</div>
+          <table class="table table-borderless table-sm fs-7">
+            <tbody>
+              <tr><td class="fw-bold text-muted">Source IP:</td><td class="font-monospace text-danger fw-bold">{{ geo_info.ip }}</td></tr>
+              <tr><td class="fw-bold text-muted">Country:</td><td>{{ geo_info.country }} ({{ geo_info.country_code }})</td></tr>
+              <tr><td class="fw-bold text-muted">City / Region:</td><td>{{ geo_info.city }}, {{ geo_info.region }}</td></tr>
+              <tr><td class="fw-bold text-muted">ISP:</td><td>{{ geo_info.isp }}</td></tr>
+              <tr><td class="fw-bold text-muted">ASN:</td><td class="font-monospace">{{ geo_info.asn }}</td></tr>
+              <tr><td class="fw-bold text-muted">Reputation:</td><td><span class="badge bg-danger">{{ geo_info.reputation_score }}</span></td></tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-warning py-2 mb-0 fs-8 border border-warning">
+            <i class="bi bi-shield-exclamation text-warning me-1"></i>
+            <strong>Disclaimer:</strong> IP geolocation represents approximate network infrastructure location and does not identify the attacker's exact physical location.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="soc-card h-100">
+          <div class="soc-card-title">Interactive Leaflet GeoLocation Map</div>
+          <div id="leaflet-map" style="height: 350px; border-radius: 8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: AUTHENTICATION -->
+  <div class="tab-pane fade" id="tab-auth" role="tabpanel">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="soc-card text-center h-100">
+          <h5 class="fw-bold">SPF Check</h5>
+          <small class="text-muted d-block mb-3">Sender Policy Framework</small>
+          <span class="badge fs-5 px-4 py-2 {% if analysis.spf_status == 'PASS' %}bg-success{% elif analysis.spf_status == 'FAIL' %}bg-danger{% else %}bg-secondary{% endif %}">
+            {{ analysis.spf_status }}
+          </span>
+          <p class="text-muted small mt-3">Verifies if sender IP address is authorized in DNS records.</p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="soc-card text-center h-100">
+          <h5 class="fw-bold">DKIM Check</h5>
+          <small class="text-muted d-block mb-3">DomainKeys Identified Mail</small>
+          <span class="badge fs-5 px-4 py-2 {% if analysis.dkim_status == 'PASS' %}bg-success{% elif analysis.dkim_status == 'FAIL' %}bg-danger{% else %}bg-secondary{% endif %}">
+            {{ analysis.dkim_status }}
+          </span>
+          <p class="text-muted small mt-3">Verifies cryptographic body signature integrity in transit.</p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="soc-card text-center h-100">
+          <h5 class="fw-bold">DMARC Check</h5>
+          <small class="text-muted d-block mb-3">Domain-based Message Authentication</small>
+          <span class="badge fs-5 px-4 py-2 {% if analysis.dmarc_status == 'PASS' %}bg-success{% elif analysis.dmarc_status == 'FAIL' %}bg-danger{% else %}bg-secondary{% endif %}">
+            {{ analysis.dmarc_status }}
+          </span>
+          <p class="text-muted small mt-3">Enforces domain alignment between From header and SPF/DKIM.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: THREAT INDICATORS & HASHES -->
+  <div class="tab-pane fade" id="tab-urls" role="tabpanel">
+    <div class="soc-card mb-4">
+      <div class="soc-card-title text-primary"><i class="bi bi-shield-lock-fill me-2"></i> Forensic Evidence Hashes & Identifiers</div>
+      <table class="table table-sm table-bordered fs-7 font-monospace">
+        <tbody>
+          <tr><td class="fw-bold text-muted" style="width: 200px;">Header Hash (MD5 Demo):</td><td class="text-danger">e99a18c428cb38d5f260853678922e03</td></tr>
+          <tr><td class="fw-bold text-muted">Body Payload Hash (SHA256):</td><td class="text-danger">a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="soc-card">
+      <div class="soc-card-title">Extracted Network Indicators (IPs, URLs & Domains)</div>
+      {% if indicator_records %}
+        <div class="table-responsive">
+          <table class="soc-table">
+            <thead>
+              <tr>
+                <th>Indicator Type</th>
+                <th>Value</th>
+                <th>Risk Classification</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for indicator in indicator_records %}
+                <tr>
+                  <td class="text-uppercase">{{ indicator.type }}</td>
+                  <td class="font-monospace text-break {% if indicator.severity == 'high' %}text-danger{% endif %}">{{ indicator.value }}</td>
+                  <td><span class="badge {% if indicator.severity == 'high' %}bg-danger{% elif indicator.severity == 'medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ indicator.severity|upper }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert alert-light border mb-0">No embedded URLs found in this email.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TAB 6: TIMELINE -->
+  <div class="tab-pane fade" id="tab-timeline" role="tabpanel">
+    <div class="soc-card">
+      <div class="soc-card-title">Received Header Hop Sequence Reconstructor</div>
+      <div class="timeline-stepper">
+        {% for hop in timeline %}
+          <div class="timeline-step">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge bg-primary">Hop #{{ hop.hop_index }}</span>
+              <strong class="text-dark font-monospace">{{ hop.server_from }}</strong>
+              <i class="bi bi-arrow-right text-muted"></i>
+              <span class="font-monospace text-secondary">{{ hop.server_by }}</span>
+            </div>
+            <div class="text-muted small">
+              IP: <span class="badge bg-dark font-monospace">{{ hop.ip_address }}</span> • Location: {{ hop.location }} • Timestamp: {{ hop.timestamp_str }}
+            </div>
+            {% if hop.flags %}
+              <div class="mt-1">
+                {% for f in hop.flags %}
+                  <span class="badge bg-danger text-white me-1">{{ f }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 7: GRAPH -->
+  <div class="tab-pane fade" id="tab-graph" role="tabpanel">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="soc-card p-2">
+          <div class="soc-card-title px-3 pt-2">
+            <span><i class="bi bi-diagram-3-fill me-2 text-info"></i> SOC Relationship Topology Graph</span>
+          </div>
+          <div id="cy-container"></div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="soc-card">
+          <div class="soc-card-title">Node Inspection Panel</div>
+          <div id="graph-node-details" class="text-muted small">
+            Click on any node in the graph (Email, Sender, Domain, IP, Location, or URL) to inspect threat attributes.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 8: RAW HEADERS -->
+  <div class="tab-pane fade" id="tab-headers" role="tabpanel">
+    <div class="soc-card">
+      <div class="soc-card-title d-flex align-items-center justify-content-between">
+        <span>Raw RFC822 Email Headers</span>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('raw-headers-block').innerText); showToast('Copied', 'Headers copied to clipboard.', 'info')" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-clipboard me-1"></i> Copy Headers
+        </button>
+      </div>
+      <pre id="raw-headers-block" class="p-3 bg-dark text-success rounded font-monospace fs-7 overflow-auto" style="max-height: 500px;">{{ email.raw_headers }}</pre>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let mapInitialized = false;
+  let graphInitialized = false;
+
+  document.getElementById('btn-tab-geo').addEventListener('shown.bs.tab', () => {
+    if (mapInitialized) return;
+    mapInitialized = true;
+
+    const lat = {{ geo_info.latitude if geo_info and geo_info.latitude else 48.1371 }};
+    const lon = {{ geo_info.longitude if geo_info and geo_info.longitude else 11.5754 }};
+
+    const map = L.map('leaflet-map').setView([lat, lon], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.marker([lat, lon]).addTo(map).bindPopup("<b>📍 Origin Infrastructure</b><br/>Approximate location based on IP.");
+  });
+
+  document.getElementById('btn-tab-graph').addEventListener('shown.bs.tab', () => {
+    if (graphInitialized) return;
+    graphInitialized = true;
+    renderCytoscapeGraph('cy-container', {});
+  });
+});
+</script>
+{% endblock %}

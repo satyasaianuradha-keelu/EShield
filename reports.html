@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block page_title %}Report Export Center{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h3 class="fw-bold">Forensic PDF Reports</h3>
+    <p class="text-muted">Generate and download official ReportLab powered PDF investigation documents.</p>
+  </div>
+</div>
+
+<div class="soc-card">
+  <div class="soc-card-title">
+    <span><i class="bi bi-file-earmark-pdf-fill me-2 text-primary"></i> Generated PDF Reports</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="soc-table">
+      <thead>
+        <tr>
+          <th>Case Number</th>
+          <th>Subject Target</th>
+          <th>Classification</th>
+          <th>Risk Score</th>
+          <th>Generated Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in cases %}
+          <tr>
+            <td><span class="fw-bold text-primary font-monospace">{{ c.case_number }}</span></td>
+            <td>{{ c.subject }}</td>
+            <td><span class="badge bg-dark">{{ c.classification }}</span></td>
+            <td><span class="fw-bold">{{ c.risk_score }} / 100</span></td>
+            <td>
+              <a href="{{ url_for('download_report', case_number=c.case_number) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                <i class="bi bi-download me-1"></i> Download PDF
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

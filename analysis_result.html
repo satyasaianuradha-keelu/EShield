@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block page_title %}Email Threat Assessment Result{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    {% set risk = fresh_analysis.risk_score if fresh_analysis else analysis.risk_score %}
+    {% set severity = fresh_analysis.severity if fresh_analysis else ('HIGH' if risk >= 70 else ('MEDIUM' if risk >= 35 else 'LOW')) %}
+    {% set classification = fresh_analysis.classification if fresh_analysis else analysis.classification %}
+    {% set confidence = fresh_analysis.confidence if fresh_analysis else analysis.confidence %}
+
+    {% if risk >= 70 %}
+      {% set banner_bg = "bg-danger text-white" %}
+      {% set status_title_key = "status_threat" %}
+      {% set status_desc_key = "status_threat_desc" %}
+      {% set icon_class = "bi-exclamation-triangle-fill" %}
+    {% elif risk >= 35 %}
+      {% set banner_bg = "bg-warning text-dark" %}
+      {% set status_title_key = "status_suspicious" %}
+      {% set status_desc_key = "status_suspicious_desc" %}
+      {% set icon_class = "bi-exclamation-diamond-fill" %}
+    {% else %}
+      {% set banner_bg = "bg-success text-white" %}
+      {% set status_title_key = "status_safe" %}
+      {% set status_desc_key = "status_safe_desc" %}
+      {% set icon_class = "bi-shield-check" %}
+    {% endif %}
+
+    <!-- Top Threat Banner -->
+    <div class="card {{ banner_bg }} border-0 rounded-4 shadow-lg mb-4 overflow-hidden">
+      <div class="card-body p-4 p-md-5">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 72px; height: 72px;">
+              <i class="bi {{ icon_class }}" style="font-size: 2.5rem;"></i>
+            </div>
+            <div>
+              <h2 class="fw-bold mb-1" data-i18n="{{ status_title_key }}">Threat Assessment Result</h2>
+              <p class="mb-0 opacity-90 fs-5" data-i18n="{{ status_desc_key }}"></p>
+            </div>
+          </div>
+          <div class="text-md-end">
+            <span class="badge bg-dark bg-opacity-50 px-3 py-2 fs-6 rounded-pill fw-bold">Case: {{ case.case_number }}</span>
+            <div class="mt-2 fw-bold fs-4">Risk Score: {{ risk }} / 100</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMINENT AI THREAT ANALYSIS SECTION -->
+    <div class="soc-card mb-4 border-start border-4 border-info">
+      <div class="soc-card-title d-flex align-items-center justify-content-between">
+        <span class="fs-4 text-info fw-bold"><i class="bi bi-cpu-fill me-2"></i> AI THREAT ANALYSIS</span>
+        <span class="badge bg-secondary font-monospace">Prototype / Demo Mode</span>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Risk Score</small>
+            <span class="fs-2 fw-extrabold {% if risk >= 70 %}text-danger{% elif risk >= 35 %}text-warning{% else %}text-success{% endif %}">
+              {{ risk }} / 100
+            </span>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Classification</small>
+            <span class="fs-4 fw-bold text-info">{{ classification }}</span>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Confidence</small>
+            <span class="fs-4 fw-bold text-light">{{ confidence }}</span>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3 bg-dark text-white rounded text-center">
+            <small class="text-white-50 text-uppercase d-block font-monospace">Severity</small>
+            <span class="fs-4 fw-bold {% if severity == 'HIGH' %}text-danger{% elif severity == 'MEDIUM' %}text-warning{% else %}text-success{% endif %}">
+              {{ severity }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why was this detected? -->
+      <div class="p-3 bg-light rounded mb-3 border">
+        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-check2-square text-success me-2"></i> Why was this detected?</h6>
+        {% if fresh_analysis and fresh_analysis.why_detected_checks %}
+          <ul class="list-unstyled mb-0 fs-7">
+            {% for check in fresh_analysis.why_detected_checks %}
+              <li class="mb-1 text-dark">
+                <i class="bi bi-check-lg text-success fw-bold me-2"></i> <strong>{{ check.text }}</strong>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <ul class="list-unstyled mb-0 fs-7">
+            <li class="mb-1 text-dark"><i class="bi bi-check-lg text-success fw-bold me-2"></i> Sender domain mismatch</li>
+            <li class="mb-1 text-dark"><i class="bi bi-check-lg text-success fw-bold me-2"></i> Suspicious URL detected</li>
+            <li class="mb-1 text-dark"><i class="bi bi-check-lg text-success fw-bold me-2"></i> Urgency-based language detected</li>
+            <li class="mb-1 text-dark"><i class="bi bi-check-lg text-success fw-bold me-2"></i> Authentication failure detected</li>
+          </ul>
+        {% endif %}
+      </div>
+
+      <!-- AI Conclusion -->
+      <div class="p-3 bg-info bg-opacity-10 border border-info rounded">
+        <h6 class="fw-bold text-info mb-1"><i class="bi bi-chat-quote-fill me-2"></i> AI Conclusion:</h6>
+        <p class="mb-0 text-dark fst-italic fs-6">
+          “{{ fresh_analysis.ai_conclusion if fresh_analysis else 'High probability of phishing based on the detected email indicators.' }}”
+        </p>
+      </div>
+    </div>
+
+    <!-- Main Explanation Grid -->
+    <div class="row g-4 mb-4">
+      <!-- Why was this email flagged? -->
+      <div class="col-md-6">
+        <div class="soc-card h-100">
+          <div class="soc-card-title text-danger">
+            <span><i class="bi bi-question-circle-fill me-2"></i> <span data-i18n="why_header">Detailed Flagged Evidence</span></span>
+          </div>
+
+          {% set reasons = analysis.reasons_json | from_json if analysis.reasons_json else [] %}
+          {% if reasons %}
+            <ul class="list-group list-group-flush border-0">
+              {% for r in reasons %}
+                <li class="list-group-item px-0 py-3 border-bottom">
+                  <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-x-circle-fill text-danger mt-1"></i>
+                    <div>
+                      <strong class="text-dark">{{ r.title }}</strong>
+                      <p class="text-muted small mb-0 mt-1">{{ r.desc }}</p>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="alert alert-success border-0 mb-0">
+              <i class="bi bi-check-circle-fill me-2"></i> No suspicious indicators or header anomalies were found.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- What should you do? -->
+      <div class="col-md-6">
+        <div class="soc-card h-100">
+          <div class="soc-card-title text-primary">
+            <span><i class="bi bi-shield-shaded me-2"></i> <span data-i18n="action_header">What should you do?</span></span>
+          </div>
+
+          <div class="d-flex flex-column gap-3 mt-2">
+            {% if risk >= 35 %}
+              <div class="p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-3 d-flex align-items-center gap-3">
+                <i class="bi bi-slash-circle-fill text-danger fs-3"></i>
+                <span class="fw-semibold text-dark" data-i18n="action_danger_1">Do not click any links or download attachments from this email.</span>
+              </div>
+
+              <div class="p-3 bg-warning bg-opacity-10 border border-warning border-opacity-25 rounded-3 d-flex align-items-center gap-3">
+                <i class="bi bi-key-fill text-warning fs-3"></i>
+                <span class="fw-semibold text-dark" data-i18n="action_danger_2">Do not provide passwords, OTPs, or financial information.</span>
+              </div>
+
+              <div class="p-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 d-flex align-items-center gap-3">
+                <i class="bi bi-send-check-fill text-primary fs-3"></i>
+                <span class="fw-semibold text-dark" data-i18n="action_danger_3">Report this email to your administrator or security team immediately.</span>
+              </div>
+            {% else %}
+              <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 d-flex align-items-center gap-3">
+                <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                <span class="fw-semibold text-dark" data-i18n="action_safe_1">This email appears safe, but always verify unexpected requests.</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons Bar with prominent Investigate Full Threat button -->
+    <div class="soc-card bg-light text-center p-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-center gap-3">
+        <a href="{{ url_for('investigation', case_number=case.case_number) }}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg fw-extrabold fs-5 py-3">
+          <i class="bi bi-search me-2"></i> Investigate Full Threat
+        </a>
+        <a href="{{ url_for('geolocation_page', case_id=case.case_number) }}" class="btn btn-outline-danger btn-lg rounded-pill px-4 fw-bold">
+          <i class="bi bi-geo-alt-fill me-2"></i> View GeoLocation Infrastructure
+        </a>
+        <a href="{{ url_for('check_email') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4 fw-bold">
+          <i class="bi bi-arrow-repeat me-2"></i> Check Another Email
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

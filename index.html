@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block page_title %}Welcome to EmailShield{% endblock %}
+
+{% block content %}
+<div class="hero-banner">
+  <div class="row align-items-center">
+    <div class="col-lg-8">
+      <span class="badge bg-primary text-uppercase px-3 py-2 mb-3 rounded-pill fw-bold">SOC Forensic Platform</span>
+      <h1 class="display-5 fw-extrabold mb-2" data-i18n="brand_title">EmailShield</h1>
+      <h4 class="text-info fw-bold mb-3" data-i18n="brand_tagline">Detect • Investigate • Stay Safe</h4>
+      <p class="lead text-light opacity-90 mb-4" style="max-width: 650px;" data-i18n="welcome_subtitle">
+        AI-Powered Email Threat Detection, Geolocation and Forensic Intelligence Platform built for both non-technical users and security analysts.
+      </p>
+
+      <div class="d-flex flex-wrap gap-3">
+        <a href="{{ url_for('check_email') }}" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm fw-bold">
+          <i class="bi bi-shield-check me-2"></i> <span data-i18n="btn_start_check">Check an Email Now</span>
+        </a>
+        <a href="{{ url_for('geolocation_page') }}" class="btn btn-outline-warning btn-lg rounded-pill px-4 fw-bold">
+          <i class="bi bi-geo-alt-fill me-2"></i> <span>GeoLocation Map</span>
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-lg rounded-pill px-4 fw-bold">
+          <i class="bi bi-speedometer2 me-2"></i> <span data-i18n="btn_view_dashboard">Analyst Dashboard</span>
+        </a>
+      </div>
+    </div>
+    <div class="col-lg-4 text-center d-none d-lg-block">
+      <div class="p-4 rounded-circle bg-primary bg-opacity-10 d-inline-block border border-info border-2 shadow-lg">
+        <i class="bi bi-shield-lock-fill text-info" style="font-size: 8rem;"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visual Workflow Banner -->
+<div class="soc-card bg-dark text-white mb-4 p-4 border border-secondary shadow-lg">
+  <div class="text-center mb-3">
+    <h5 class="fw-bold text-info text-uppercase tracking-wider mb-1"><i class="bi bi-diagram-3-fill me-2"></i> Integrated End-to-End Investigation Workflow</h5>
+    <small class="text-white-50">Automated threat analysis pipeline from raw email arrival to forensic report generation</small>
+  </div>
+  <div class="d-flex flex-wrap align-items-center justify-content-between text-center gap-2 font-monospace fs-7">
+    <div class="p-2 rounded bg-primary bg-opacity-25 border border-primary text-white flex-fill">
+      <i class="bi bi-envelope-fill d-block fs-4 text-info mb-1"></i> EMAIL
+    </div>
+    <i class="bi bi-arrow-right text-info fs-5 d-none d-md-block"></i>
+    <div class="p-2 rounded bg-primary bg-opacity-25 border border-primary text-white flex-fill">
+      <i class="bi bi-cpu-fill d-block fs-4 text-info mb-1"></i> AI ANALYSIS
+    </div>
+    <i class="bi bi-arrow-right text-info fs-5 d-none d-md-block"></i>
+    <div class="p-2 rounded bg-primary bg-opacity-25 border border-primary text-white flex-fill">
+      <i class="bi bi-shield-exclamation d-block fs-4 text-warning mb-1"></i> THREAT DETECTION
+    </div>
+    <i class="bi bi-arrow-right text-info fs-5 d-none d-md-block"></i>
+    <div class="p-2 rounded bg-primary bg-opacity-25 border border-primary text-white flex-fill">
+      <i class="bi bi-link-45deg d-block fs-4 text-info mb-1"></i> IP/URL EXTRACTION
+    </div>
+    <i class="bi bi-arrow-right text-info fs-5 d-none d-md-block"></i>
+    <div class="p-2 rounded bg-primary bg-opacity-25 border border-primary text-white flex-fill">
+      <i class="bi bi-geo-alt-fill d-block fs-4 text-danger mb-1"></i> GEOLOCATION
+    </div>
+    <i class="bi bi-arrow-right text-info fs-5 d-none d-md-block"></i>
+    <div class="p-2 rounded bg-primary bg-opacity-25 border border-primary text-white flex-fill">
+      <i class="bi bi-search d-block fs-4 text-success mb-1"></i> FORENSIC INVESTIGATION
+    </div>
+    <i class="bi bi-arrow-right text-info fs-5 d-none d-md-block"></i>
+    <div class="p-2 rounded bg-primary bg-opacity-25 border border-primary text-white flex-fill">
+      <i class="bi bi-file-earmark-pdf-fill d-block fs-4 text-danger mb-1"></i> REPORT
+    </div>
+  </div>
+</div>
+
+<!-- 3 Prominent Core Feature Cards -->
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="soc-card text-center h-100 p-4 border-start border-4 border-primary">
+      <div class="stat-icon blue mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+      <h5 class="fw-bold text-dark">🛡 AI Threat Detection</h5>
+      <p class="text-muted fs-7">Analyze emails in real-time to identify phishing, spoofing, BEC, and malicious attachments with confidence scoring.</p>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="soc-card text-center h-100 p-4 border-start border-4 border-danger">
+      <div class="stat-icon red mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+        <i class="bi bi-geo-alt-fill"></i>
+      </div>
+      <h5 class="fw-bold text-dark">🌍 GeoLocation Intelligence</h5>
+      <p class="text-muted fs-7">Identify approximate geographic locations of suspicious network infrastructure, mail relays, and ISP host servers.</p>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="soc-card text-center h-100 p-4 border-start border-4 border-success">
+      <div class="stat-icon green mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+        <i class="bi bi-search"></i>
+      </div>
+      <h5 class="fw-bold text-dark">🔎 Forensic Intelligence</h5>
+      <p class="text-muted fs-7">Collect evidence, correlate threat indicators across timeline hops, manage cases, and generate official PDF reports.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block page_title %}Case Management Console{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h3 class="fw-bold">Forensic Case Repository</h3>
+    <p class="text-muted">Track open threat investigations, assign priority, and record analyst observations.</p>
+  </div>
+</div>
+
+<div class="soc-card">
+  <div class="soc-card-title">
+    <span><i class="bi bi-folder-fill me-2 text-primary"></i> All Investigation Cases</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="soc-table">
+      <thead>
+        <tr>
+          <th>Case Number</th>
+          <th>Subject</th>
+          <th>Sender</th>
+          <th>Classification</th>
+          <th>Risk Score</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in cases %}
+          <tr>
+            <td><span class="fw-bold text-primary font-monospace">{{ c.case_number }}</span></td>
+            <td><div class="text-truncate" style="max-width: 220px;">{{ c.subject }}</div></td>
+            <td><div class="text-truncate small text-muted" style="max-width: 180px;">{{ c.sender }}</div></td>
+            <td>
+              {% if c.classification == 'SAFE' %}
+                <span class="badge-threat safe">{{ c.classification }}</span>
+              {% elif c.classification in ['SUSPICIOUS', 'SPOOFING'] %}
+                <span class="badge-threat medium">{{ c.classification }}</span>
+              {% else %}
+                <span class="badge-threat high">{{ c.classification }}</span>
+              {% endif %}
+            </td>
+            <td><span class="fw-bold">{{ c.risk_score }} / 100</span></td>
+            <td>
+              {% if c.status == 'Open' %}
+                <span class="badge bg-danger">{{ c.status }}</span>
+              {% elif c.status == 'Under Investigation' %}
+                <span class="badge bg-warning text-dark">{{ c.status }}</span>
+              {% else %}
+                <span class="badge bg-success">{{ c.status }}</span>
+              {% endif %}
+            </td>
+            <td><span class="badge bg-light text-dark border">{{ c.priority }}</span></td>
+            <td>
+              <a href="{{ url_for('investigation', case_number=c.case_number) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                <i class="bi bi-search me-1"></i> Open
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
